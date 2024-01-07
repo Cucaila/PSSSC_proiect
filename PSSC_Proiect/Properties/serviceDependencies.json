@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "secrets1": {
+      "type": "secrets"
+    },
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:DefaultConnection",
+      "connectionString": "Endpoint=sb://proiect-pssc.servicebus.windows.net/;SharedAccessKeyName=proiect-policy;SharedAccessKey=L+CkB+R9gn54S9M+aH9Dh5pi/4XKESAE5+ASbKUyxaI=;EntityPath=proiect-coada"
+    }
+  }
+}
