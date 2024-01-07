@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Domain.Models.OrdersCancellationCart;
 using static Domain.Models.OrdersCart;
 
 namespace Domain.Repositories
@@ -14,5 +15,6 @@ namespace Domain.Repositories
         TryAsync<List<CalculateCustomerOrder>> TryGetExistingOrders();
 
         TryAsync<Unit> TrySaveOrders(PlacedOrder order);
+        TryAsync<Unit> TryCancelOrders(CanceledOrder order);
     }
 }

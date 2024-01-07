@@ -12,9 +12,7 @@ namespace Domain
 {
     public static class CancelOrdersOperation
     {
-        public static Task<IOrdersCancellation> ValidateAndProcessCancellationAsync(
-    Func<OrderRegistrationCode, Option<OrderRegistrationCode>> checkOrderExist,
-    UnvalidatedOrdersCancellation orders)
+        public static Task<IOrdersCancellation> ValidateAndProcessCancellationAsync(Func<OrderRegistrationCode, Option<OrderRegistrationCode>> checkOrderExist,UnvalidatedOrdersCancellation orders)
         {
             return orders.OrderCancellationList  
                 .Select(ValidateCancellationOrder(checkOrderExist))

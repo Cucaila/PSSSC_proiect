@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static Domain.Models.CancelOrderEvent;
 using static Domain.Models.OrdersCancellation;
+using static Domain.Models.OrdersCancellationCart;
 using static LanguageExt.Prelude;
 
 namespace Domain
@@ -27,15 +28,18 @@ namespace Domain
 
         public async Task<ICancelOrderEvent> ExecuteAsync(CancelOrderCommand command)
         {
-            UnvalidatedOrdersCancellation unvalidatedCancellation = new UnvalidatedOrdersCancellation(command.InputOrderCancellation);
+            UnvalidatedOrdersCancellationCart unvalidatedCancellation = new UnvalidatedOrdersCancellationCart(command.InputOrderCancellation);
 
 
-            var result = from existingOrder in orderLineRepository.TryGetExistingOrders()
-                          .ToEither(ex => new FailedCancellation(ex.ToString()) as IOrdersCancellation)
-                         let checkOrdersExists = (Func<OrderRegistrationCode, Option<OrderRegistrationCode>>)(order => CheckOrderExists(existingOrder, order))
+            var result = from existingOrders in orderLineRepository.TryGetExistingOrders()
+.ToEither(ex => new FailCancellation(ex.ToString()) as IOrdersCancellation)
+                         let checkOrdersExists = (Func<OrderRegistrationCode, Option<OrderRegistrationCode>>)(orderCode =>
+                             existingOrders
+                             .Select(c => c.OrderRegistrationCode) // Presupunând că 'c' este de tip 'CalculateCustomerOrder'
+                             .Any(code => code == orderCode) ? Some(orderCode) : None)
                          from canceledOrders in ExecuteWorkflowAsync(unvalidatedCancellation, existingOrder, checkOrdersExists).ToAsync()
                          from _ in orderLineRepository.TryCancelOrders(canceledOrders)
-                         .ToEither(ex => new FailedCancellation(ex.ToString()) as IOrdersCancellation)
+                         .ToEither(ex => new FailCancellation(ex.ToString()) as IOrdersCancellation)
                          select canceledOrders;
 
             return await result.Match(
@@ -44,7 +48,7 @@ namespace Domain
             );
         }
 
-        private async Task<Either<IOrdersCancellation, CanceledOrder>> ExecuteWorkflowAsync(UnvalidatedOrdersCancellation unvalidatedCancellation,
+        private async Task<Either<IOrdersCancellationCart, CanceledOrder>> ExecuteWorkflowAsync(UnvalidatedOrdersCancellation unvalidatedCancellation,
                                                                                             IEnumerable<CalculateCustomerOrder> existingOrder,
                                                                                             Func<OrderRegistrationCode, Option<OrderRegistrationCode>> checkOrderExist)
         {

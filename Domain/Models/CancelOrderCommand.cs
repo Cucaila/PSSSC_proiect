@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using static Domain.Models.OrdersCancellationCart;
 
 namespace Domain.Models
 {
     public record CancelOrderCommand
     {
-        public CancelOrderCommand(IReadOnlyCollection<UnvalidatedCustomerOrder> inputOrder)
+        public CancelOrderCommand(IReadOnlyCollection<UnvalidatedOrdersCancellationCart> inputOrderCancellation)
         {
-            InputOrder = inputOrder;
+            InputOrderCancellation = inputOrderCancellation;
         }
 
-        public IReadOnlyCollection<UnvalidatedCustomerOrder> InputOrder { get; }
+        public IReadOnlyCollection<UnvalidatedOrdersCancellationCart> InputOrderCancellation { get; }
     }
 
 }

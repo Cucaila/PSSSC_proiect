@@ -42,6 +42,14 @@ namespace Domain.Models
             public IReadOnlyCollection<UnvalidatedCustomerOrderCancellation> OrderCancellationList { get; }
             public string Reason { get; }
         }
+        public record FailCancellation : IOrdersCancellation
+        {
+            internal FailCancellation(string reason)
+            {
+                Reason = reason;
+            }
+            public string Reason { get; }
+        }
 
         public record ValidatedOrdersCancellation : IOrdersCancellation
         {
