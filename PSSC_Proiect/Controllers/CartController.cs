@@ -67,20 +67,5 @@ namespace PSSC_Proiect.Controllers
             OrderAddress: order.Address,
             OrderPrice: order.Price
             );
-
-        [HttpDelete("{orderId}")]
-        public async Task<IActionResult> CancelOrder([FromServices] CancelOrderWorkflow cancelOrderWorkflow, int orderId)
-        {
-            // Perform necessary validation, authorization, etc., before cancellation
-
-            CancelOrderCommand command = new CancelOrderCommand(orderId);
-            var result = await cancelOrderWorkflow.ExecuteAsync(command);
-
-            return result.Match<IActionResult>(
-                whenCancelOrderFailedEvent: failedEvent => StatusCode(StatusCodes.Status500InternalServerError, failedEvent.Reason),
-                whenCancelOrderSucceededEvent: successEvent => Ok()
-            );
-        }
     }
-
 }
