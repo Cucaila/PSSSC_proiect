@@ -11,6 +11,7 @@ using static Domain.Models.BillingCart;
 using static Domain.Models.BillingOrderEvent;
 using static Domain.Models.OrdersCart;
 using static LanguageExt.Prelude;
+using static Domain.BillingOperations;
 
 namespace Domain
 {
@@ -67,18 +68,34 @@ namespace Domain
             );
         }
 
+        public async Task<Either<IBillingCart, BilledOrdersCart>> ExecuteBillingAsync(UnbilledOrdersCart unvalidatedCart,
+                                                                                      IEnumerable<BilledOrderLine> existingOrder,
+                                                                                    Func<OrderRegistrationCode, Option<OrderRegistrationCode>> checkInvoiceExist)
+        {
+            IBillingCart cart = await ValidateBillingCartAsync(checkInvoiceExist, unvalidatedCart);
+            cart = CalculateBillingAmount(cart);
+            //cart = GenerateInvoice(cart);
 
-        //private async Task<Either<FailedBillingCart, BilledOrdersCart>> SaveBilledOrdersAsync(BilledOrdersCart
+            return cart.Match<Either<IBillingCart, BilledOrdersCart>>(
+                whenUnvalidatedBillingCart: unvalidated => Left(unvalidated as IBillingCart),
+                whenInvalidBillingCart: invalid => Left(invalid as IBillingCart),
+                whenValidatedBillingCart: validated => Left(validated as IBillingCart),
+                whenCalculatedBilling: calculated => Left(calculated as IBillingCart),
+                whenInvoiceGenerated: generated => Left(generated as IBillingCart),
+                whenBillingFailed: failed => Left(failed as IBillingCart),
+                whenBilledInvoice: billedInvoice => Right(billedInvoice)
+                );
+        }
 
         // Metodele folosite în procesul de facturare
-        private async Task<Either<IBillingCart, ValidatedOrdersCart>> ValidateOrdersForBilling(UnbilledOrdersCart cart)
+        private async Task<Either<IBillingCart, UnbilledOrdersCart>> ValidateOrdersForBilling(UnbilledOrdersCart cart)
         {
             var isValid = true;
 
             if (isValid)
             {
                 // Convertim coșul într-unul validat pentru facturare
-                var validatedOrders = new ValidatedOrdersCart(cart.OrdersList);
+                var validatedOrders = new UnbilledOrdersCart(cart.OrdersList);
                 return Right(validatedOrders);
             }
             else
@@ -88,46 +105,43 @@ namespace Domain
             }
         }
 
-
-            private static async Task<Either<IBillingCart, BilledOrdersCart>> BillOrdersAsync(ValidatedOrdersCart validatedOrders)
+        private static async Task<Either<IBillingCart, BilledOrdersCart>> BillOrdersAsync(UnbilledOrdersCart validatedOrders)
+        {
+            try
             {
-                try
+                var billedOrders = new List<BilledOrderLine>();
+                decimal totalAmountBilled = 0;
+
+                foreach (var validatedOrder in validatedOrders.OrdersList)
                 {
-                    var billedOrders = new List<BilledOrderLine>();
-                    decimal totalAmountBilled = 0;
 
-                    foreach (var validatedOrder in validatedOrders.OrdersList)
-                    {
+                    var productId = validatedOrder.OrderRegistrationCode; // ID-ul produsului
+                    var productName = validatedOrder.OrderDescription; // Numele produsului
+                    var quantity = validatedOrder.OrderAmount; // Cantitatea produsului în comandă
+                    var unitPrice = validatedOrder.OrderPrice; // Prețul unitar al comenzii
+                    var adress = validatedOrder.OrderAddress; // Adresa comenzii
 
-                        var productId = validatedOrder.OrderRegistrationCode; // ID-ul produsului
-                        var productName = validatedOrder.OrderDescription; // Numele produsului
-                        var quantity = validatedOrder.OrderAmount; // Cantitatea produsului în comandă
-                        var unitPrice = validatedOrder.OrderPrice; // Prețul unitar al produsului
-                        var adress = validatedOrder.OrderAddress;
-
-                        var lineTotal = (decimal)(quantity.Amount * unitPrice.Price);
-                        var billedLine = new BilledOrderLine(productId, productName, quantity, adress, unitPrice);
-                        billedOrders.Add(billedLine);
-                        totalAmountBilled += lineTotal; // Adunăm totalul liniei la suma totală facturată
-                    }
-
-                    // Creăm un coș cu comenzile facturate
-                    var billingDate = DateTime.UtcNow; // Data și ora actuală UTC
-                    var invoiceNumber = "Invoice" + billingDate.Ticks.ToString(); // Un număr unic de factură
-
-                    var billedOrdersCart = new BilledOrdersCart(billedOrders, invoiceNumber, totalAmountBilled, billingDate);
-                    return Right(billedOrdersCart);
+                    //var lineTotal = (decimal)(quantity.Amount * unitPrice.Price);
+                    //var billedLine = new BilledOrderLine(productId, productName, quantity, adress, unitPrice);
+                    //billedOrders.Add(billedLine);
+                    //totalAmountBilled += lineTotal; // Adunăm totalul liniei la suma totală facturată
                 }
-                catch (Exception ex)
-                {
-                    // În caz de eroare, returnăm un coș de facturare eșuat
-                    return Left(new FailedBillingCart("Billing failed: " + ex.Message) as IBillingCart);
 
+                // Creăm un coș cu comenzile facturate
+                var billingDate = DateTime.UtcNow; // Data și ora actuală UTC
+                var invoiceNumber = "Invoice" + billingDate.Ticks.ToString(); // Un număr unic de factură
 
-                }
+                var billedOrdersCart = new BilledOrdersCart(billedOrders, invoiceNumber, totalAmountBilled, billingDate);
+                return Right(billedOrdersCart);
+            }
+            catch (Exception ex)
+            {
+                // În caz de eroare, returnăm un coș de facturare eșuat
+                return Left(new FailedBillingCart("Billing failed: " + ex.Message) as IBillingCart);
 
 
             }
+        }
         private async Task<Either<IBillingCart, BilledOrdersCart>> SaveBilledOrdersAsync(BilledOrdersCart billedOrdersCart)
         {
             try
@@ -146,6 +160,5 @@ namespace Domain
                 return Left(new FailedBillingCart($"Failed to save billed orders: {ex.Message}") as IBillingCart);
             }
         }
-
     }
 }

@@ -5,12 +5,12 @@ namespace Domain.Models
 {
     public record BillingOrderCommand
     {
-        public BillingOrderCommand(IReadOnlyCollection<ValidatedCustomerOrder> inputOrders)
+        public BillingOrderCommand(IReadOnlyCollection<UnvalidatedBillingOrder> inputOrders)
         {
             InputOrders = inputOrders;
         }
 
-        public IReadOnlyCollection<ValidatedCustomerOrder> InputOrders { get; }
+        public IReadOnlyCollection<UnvalidatedBillingOrder> InputOrders { get; }
     }
 
 }
