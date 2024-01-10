@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Domain.Models.BillingCart;
 using static Domain.Models.OrdersCart;
 
 namespace Domain.Repositories
