@@ -14,3 +14,10 @@ Data/obj/Data.csproj.nuget.g.props
 *.json
 *.txt
 *.props
+*.config
+*.dll
+*.pdb
+*.CopyComplete
+*.exe
+*.sentinel
+*.v1
