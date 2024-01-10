@@ -70,11 +70,11 @@ namespace Domain.Models
 
         public record CheckedBillingOrder : IBillingCart
         {
-            public CheckedBillingOrder(IReadOnlyCollection<ValidatedBillingLine> billedOrderLine)
+            public CheckedBillingOrder(IReadOnlyCollection<CheckBillingOrder> billedOrderLine)
             {
                 BilledOrderLine = billedOrderLine;
             }
-            public IReadOnlyCollection<ValidatedBillingLine> BilledOrderLine { get; }
+            public IReadOnlyCollection<CheckBillingOrder> BilledOrderLine { get; }
         }
     }
 }

@@ -77,13 +77,13 @@ namespace Domain
             //cart = GenerateInvoice(cart);
 
             return cart.Match<Either<IBillingCart, BilledOrdersCart>>(
-                whenUnvalidatedBillingCart: unvalidated => Left(unvalidated as IBillingCart),
-                whenInvalidBillingCart: invalid => Left(invalid as IBillingCart),
-                whenValidatedBillingCart: validated => Left(validated as IBillingCart),
-                whenCalculatedBilling: calculated => Left(calculated as IBillingCart),
-                whenInvoiceGenerated: generated => Left(generated as IBillingCart),
-                whenBillingFailed: failed => Left(failed as IBillingCart),
-                whenBilledInvoice: billedInvoice => Right(billedInvoice)
+                whenUnbilledOrdersCart: unvalidated => Left(unvalidated as IBillingCart),
+                whenBillingPreparationCart: invalid => Left(invalid as IBillingCart),
+                whenFailedBillingCart: failed => Left(failed as IBillingCart),
+                whenValidatedBilledOrdersCart: valid => Left(valid as IBillingCart),
+                whenCalculatedBillingOrder: calculated => Left(calculated as IBillingCart),
+                whenCheckedBillingOrder: check => Left(check as IBillingCart),
+                whenBilledOrdersCart: billingorders => Right(billingorders)
                 );
         }
 
@@ -121,10 +121,10 @@ namespace Domain
                     var unitPrice = validatedOrder.OrderPrice; // Prețul unitar al comenzii
                     var adress = validatedOrder.OrderAddress; // Adresa comenzii
 
-                    //var lineTotal = (decimal)(quantity.Amount * unitPrice.Price);
+                    var lineTotal = (quantity * unitPrice);
                     //var billedLine = new BilledOrderLine(productId, productName, quantity, adress, unitPrice);
                     //billedOrders.Add(billedLine);
-                    //totalAmountBilled += lineTotal; // Adunăm totalul liniei la suma totală facturată
+                    totalAmountBilled += (decimal)lineTotal; // Adunăm totalul liniei la suma totală facturată
                 }
 
                 // Creăm un coș cu comenzile facturate

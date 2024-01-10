@@ -17,7 +17,7 @@ namespace Domain
                 .Select(ValidateBillingLine(checkInvoiceExist))
                 .Aggregate(CreateEmptyValidatedBillingCart().ToAsync(), ReduceValidBilling)
                 .MatchAsync(
-                    Right: validatedLines => new CheckedBillingOrder(validatedLines),
+                    Right: validatedLines => new ValidatedBilledOrdersCart(validatedLines),
                     LeftAsync: errorMessage => Task.FromResult((IBillingCart)new BillingPreparationCart(cart.OrdersList, errorMessage))
          );
 
@@ -52,13 +52,14 @@ namespace Domain
             return list;
         }
 
-        public static IBillingCart CalculateBillingAmount(IBillingCart cart) => cart.Match(
+        public static IBillingCart CalculateBillingAmount(IBillingCart billing) => billing.Match(
              whenUnbilledOrdersCart: unbilledOrdersCart => unbilledOrdersCart,
              whenBillingPreparationCart: billinPreparationCart => billinPreparationCart,
              whenFailedBillingCart: failedBillingCart => failedBillingCart,
              whenBilledOrdersCart: billedOrder => billedOrder,
+             whenCalculatedBillingOrder: calculatedBillingOrder => calculatedBillingOrder,
              whenCheckedBillingOrder: checkedBillingOrderByCode => checkedBillingOrderByCode,
-             whenValidatedOrdersCart: CalculateTotalAmount
+             whenValidatedBilledOrdersCart: CalculateTotalAmount
 
           );
 
@@ -73,7 +74,7 @@ namespace Domain
                                       validOrder.OrderDescription,
                                       validOrder.OrderAmount,
                                       validOrder.OrderAddress,
-                                      validOrder.OrderPrice
+                                      validOrder.OrderPrice * validOrder.OrderAmount
             );
             
     }

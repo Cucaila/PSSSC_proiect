@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using Domain.Models;
+using LanguageExt;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,5 @@ namespace Domain.Repositories
     public interface IOrderHeaderRepository
     {
         TryAsync<List<int>> TryGetExistingOrders(IEnumerable<int> ordertsToCheck);
-
     }
 }
